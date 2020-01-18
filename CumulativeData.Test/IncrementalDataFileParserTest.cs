@@ -51,85 +51,85 @@ namespace CumulativeData.Test
                              && x.DevelopmentYear == new Year("1993")).Increment);
         }
 
-        [TestMethod]
-        [DeploymentItem(@"TestResources\IncrementalClaimDataMissingColumn.csv")]
-        public async Task Parse_FileWithMissingColumn_ParsesTestFileInput()
-        {
-            // arrange
-            _container
-                .GetMock<IConfig>()
-                .Setup(x => x.IncrementalDataFilePath)
-                .Returns(Path.GetFullPath("IncrementalClaimDataMissingColumn.csv"));
-
-            // act
-            var incrementalClaimDataList = await _sut.Parse();
-
-            // assert
-            var rowCount = 12;
-            var productCount = 2;
-            var rowCountForAGivenProduct = 3;
-
-            Assert.AreEqual(rowCount, incrementalClaimDataList.Count);
-            Assert.AreEqual(productCount, incrementalClaimDataList.GroupBy(x => x.Product).Count());
-            Assert.AreEqual(rowCountForAGivenProduct, incrementalClaimDataList.Count(x => x.Product == "Comp"));
-            Assert.AreEqual(100, incrementalClaimDataList
-                .Single(x => x.Product == "Non-Comp"
-                             && x.OriginalYear == new Year("1993")
-                             && x.DevelopmentYear == new Year("1993")).Increment);
-        }
-
-        [TestMethod]
-        [DeploymentItem(@"TestResources\IncrementalClaimDataMissingHeader.csv")]
-        public async Task Parse_FileWithMissingHeader_ParsesTestFileInput()
-        {
-            // arrange
-            _container
-                .GetMock<IConfig>()
-                .Setup(x => x.IncrementalDataFilePath)
-                .Returns(Path.GetFullPath("IncrementalClaimDataMissingHeader.csv"));
-
-            // act
-            var incrementalClaimDataList = await _sut.Parse();
-
-            // assert
-            var rowCount = 12;
-            var productCount = 2;
-            var rowCountForAGivenProduct = 3;
-
-            Assert.AreEqual(rowCount, incrementalClaimDataList.Count);
-            Assert.AreEqual(productCount, incrementalClaimDataList.GroupBy(x => x.Product).Count());
-            Assert.AreEqual(rowCountForAGivenProduct, incrementalClaimDataList.Count(x => x.Product == "Comp"));
-            Assert.AreEqual(100, incrementalClaimDataList
-                .Single(x => x.Product == "Non-Comp"
-                             && x.OriginalYear == new Year("1993")
-                             && x.DevelopmentYear == new Year("1993")).Increment);
-        }
-
-        [TestMethod]
-        [DeploymentItem(@"TestResources\IncrementalClaimDataMissingDelimiter.csv")]
-        public async Task Parse_FileWithMissingDelimiter_ParsesTestFileInput()
-        {
-            // arrange
-            _container
-                .GetMock<IConfig>()
-                .Setup(x => x.IncrementalDataFilePath)
-                .Returns(Path.GetFullPath("IncrementalClaimDataMissingDelimiter.csv"));
-
-            // act
-            var incrementalClaimDataList = await _sut.Parse();
-
-            // assert
-            var rowCount = 12;
-            var productCount = 2;
-            var rowCountForAGivenProduct = 3;
-
-            Assert.AreEqual(rowCount, incrementalClaimDataList.Count);
-            Assert.AreEqual(productCount, incrementalClaimDataList.GroupBy(x => x.Product).Count());
-            Assert.AreEqual(rowCountForAGivenProduct, incrementalClaimDataList.Count(x => x.Product == "Comp"));
-            Assert.AreEqual(100, incrementalClaimDataList
-                .Single(x => x.Product == "Non-Comp"
-                             && x.OriginalYear == new Year("1993")
-                             && x.DevelopmentYear == new Year("1993")).Increment);
-        }
+//        [TestMethod]
+//        [DeploymentItem(@"TestResources\IncrementalClaimDataMissingColumn.csv")]
+//        public async Task Parse_FileWithMissingColumn_ParsesTestFileInput()
+//        {
+//            // arrange
+//            _container
+//                .GetMock<IConfig>()
+//                .Setup(x => x.IncrementalDataFilePath)
+//                .Returns(Path.GetFullPath("IncrementalClaimDataMissingColumn.csv"));
+//
+//            // act
+//            var incrementalClaimDataList = await _sut.Parse();
+//
+//            // assert
+//            var rowCount = 12;
+//            var productCount = 2;
+//            var rowCountForAGivenProduct = 3;
+//
+//            Assert.AreEqual(rowCount, incrementalClaimDataList.Count);
+//            Assert.AreEqual(productCount, incrementalClaimDataList.GroupBy(x => x.Product).Count());
+//            Assert.AreEqual(rowCountForAGivenProduct, incrementalClaimDataList.Count(x => x.Product == "Comp"));
+//            Assert.AreEqual(100, incrementalClaimDataList
+//                .Single(x => x.Product == "Non-Comp"
+//                             && x.OriginalYear == new Year("1993")
+//                             && x.DevelopmentYear == new Year("1993")).Increment);
+//        }
+//
+//        [TestMethod]
+//        [DeploymentItem(@"TestResources\IncrementalClaimDataMissingHeader.csv")]
+//        public async Task Parse_FileWithMissingHeader_ParsesTestFileInput()
+//        {
+//            // arrange
+//            _container
+//                .GetMock<IConfig>()
+//                .Setup(x => x.IncrementalDataFilePath)
+//                .Returns(Path.GetFullPath("IncrementalClaimDataMissingHeader.csv"));
+//
+//            // act
+//            var incrementalClaimDataList = await _sut.Parse();
+//
+//            // assert
+//            var rowCount = 12;
+//            var productCount = 2;
+//            var rowCountForGivenProduct = 3;
+//
+//            Assert.AreEqual(rowCount, incrementalClaimDataList.Count);
+//            Assert.AreEqual(productCount, incrementalClaimDataList.GroupBy(x => x.Product).Count());
+//            Assert.AreEqual(rowCountForGivenProduct, incrementalClaimDataList.Count(x => x.Product == "Comp"));
+//            Assert.AreEqual(100, incrementalClaimDataList
+//                .Single(x => x.Product == "Non-Comp"
+//                             && x.OriginalYear == new Year("1993")
+//                             && x.DevelopmentYear == new Year("1993")).Increment);
+//        }
+//
+//        [TestMethod]
+//        [DeploymentItem(@"TestResources\IncrementalClaimDataMissingDelimiter.csv")]
+//        public async Task Parse_FileWithMissingDelimiter_ParsesTestFileInput()
+//        {
+//            // arrange
+//            _container
+//                .GetMock<IConfig>()
+//                .Setup(x => x.IncrementalDataFilePath)
+//                .Returns(Path.GetFullPath("IncrementalClaimDataMissingDelimiter.csv"));
+//
+//            // act
+//            var incrementalClaimDataList = await _sut.Parse();
+//
+//            // assert
+//            var rowCount = 12;
+//            var productCount = 2;
+//            var rowCountForAGivenProduct = 3;
+//
+//            Assert.AreEqual(rowCount, incrementalClaimDataList.Count);
+//            Assert.AreEqual(productCount, incrementalClaimDataList.GroupBy(x => x.Product).Count());
+//            Assert.AreEqual(rowCountForAGivenProduct, incrementalClaimDataList.Count(x => x.Product == "Comp"));
+//            Assert.AreEqual(100, incrementalClaimDataList
+//                .Single(x => x.Product == "Non-Comp"
+//                             && x.OriginalYear == new Year("1993")
+//                             && x.DevelopmentYear == new Year("1993")).Increment);
+//        }
     }
 }

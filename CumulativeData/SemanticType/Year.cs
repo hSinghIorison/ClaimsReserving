@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Globalization;
 
 namespace CumulativeData.SemanticType
 {
-    public sealed class Year : SemanticTypeBase<string>, IEquatable<Year>
+    public sealed class Year : SemanticTypeBase<string>, IEquatable<Year>, IComparable<Year>
     {
         public int DateTimeYear { get; }
 
@@ -17,6 +16,11 @@ namespace CumulativeData.SemanticType
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             return DateTimeYear == other.DateTimeYear;
+        }
+
+        public int CompareTo(Year other)
+        {
+            return DateTimeYear.CompareTo(other.DateTimeYear);
         }
 
         public override bool Equals(object obj)
@@ -43,6 +47,11 @@ namespace CumulativeData.SemanticType
         public static bool operator !=(Year left, Year right)
         {
             return !Equals(left, right);
+        }
+
+        public static int operator -(Year left, Year right)
+        {
+            return left.DateTimeYear - right.DateTimeYear + 1; //inclusive
         }
 
         private static bool IsValid(string arg)

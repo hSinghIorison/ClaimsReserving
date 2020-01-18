@@ -33,7 +33,7 @@ namespace CumulativeData
         public Type TargetType => typeof(Year);
     }
 
-    public class IncrementalDataFileParser
+    public class IncrementalDataFileParser : IIncrementalDataFileParser
     {
         private readonly CsvParser<IncrementalClaimData> _csvParser;
         private readonly IConfig _config;
@@ -54,7 +54,6 @@ namespace CumulativeData
                 return await Task.Run(() =>
                 {
                     var results = _csvParser.ReadFromFile(_config.IncrementalDataFilePath, Encoding.UTF8);
-                    
                     return results.Select(x => x.Result).ToList();
                 });
             }
@@ -68,6 +67,11 @@ namespace CumulativeData
             }
 
         }
+    }
+
+    public interface IIncrementalDataFileParser
+    {
+        Task<List<IncrementalClaimData>> Parse();
     }
 
     public interface IConfig
