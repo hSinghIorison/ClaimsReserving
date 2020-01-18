@@ -44,11 +44,6 @@ namespace CumulativeData
             return new CumulativeDataRow { Product = productGroup.Key };
         }
 
-//        private Task<CumulativeDataRow> MakeRow(KeyValuePair<string, HashSet<ClaimTriangle>> productGroup)
-//        {
-////            throw new System.NotImplementedException();
-//        }
-
         private HashSet<ClaimTriangle> ToClaimHashSet(IGrouping<string, IncrementalClaimData> incrementalClaims)
         {
             var claimTriangles = new HashSet<ClaimTriangle>();
