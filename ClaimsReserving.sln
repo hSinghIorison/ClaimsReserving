@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29613.14
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CumulativeData", "CumulativeData\CumulativeData.csproj", "{F24D6057-204B-42C8-A69D-1956B257CA6C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CumulativeData", "CumulativeData\CumulativeData.csproj", "{F24D6057-204B-42C8-A69D-1956B257CA6C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CumulativeData.Test", "CumulativeData.Test\CumulativeData.Test.csproj", "{5CC0FBE2-6BCD-4E05-BF39-BB81025765BC}"
 EndProject

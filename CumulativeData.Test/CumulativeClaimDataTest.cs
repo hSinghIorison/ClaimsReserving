@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using CumulativeData.Model;
 using CumulativeData.SemanticType;
+using log4net;
 using Microsoft.Practices.Unity;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SemanticComparison.Fluent;
@@ -124,6 +125,34 @@ namespace CumulativeData.Test
                 var cumulativeDataRows = expected.Single(x => x.Product == cumulativeDataRow.Product);
                 Assert.AreEqual(cumulativeDataRows.ToString(), cumulativeDataRow.ToString());
             }
+        }
+
+        [TestMethod]
+        [DeploymentItem(@"TestResources\IncrementalClaimData.csv")]
+        public async Task Process_ProductGroupsWithClaimTriangles_CumulativeDataFileCreated()
+        {
+            // arrange
+            _container
+                .GetMock<IConfig>()
+                .Setup(x => x.IncrementalDataFilePath)
+                .Returns(Path.GetFullPath("IncrementalClaimData.csv"));
+
+            var cTestOutput = @"C:\Test\Output";
+            _container
+                .GetMock<IConfig>()
+                .Setup(x => x.CumulativeDataFilePath)
+                .Returns(Path.GetFullPath(cTestOutput));
+
+            var incrementalDataFileParser = _container.Resolve<IIncrementalDataFileParser>();
+            var incrementalClaims = await incrementalDataFileParser.Parse();
+
+            // act
+            var actualRows = await _sut.Process(incrementalClaims);
+            var cumulativeDataFileProducer = new CumulativeDataFileProducer(_container.Resolve<IConfig>(), _container.Resolve<ILog>());
+            var file = await cumulativeDataFileProducer.CreateFile(actualRows);
+            
+            // assert
+            Assert.IsTrue(File.Exists(Path.Combine(cTestOutput,file)));
         }
     }
 }

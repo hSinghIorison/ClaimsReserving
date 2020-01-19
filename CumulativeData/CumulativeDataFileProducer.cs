@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading.Tasks;
 using CumulativeData.Model;
 using log4net;
 
@@ -8,7 +9,7 @@ namespace CumulativeData
 {
     public interface ICumulativeDataFileProducer
     {
-        void CreateFile(CumulativeClaimData data);
+        Task<string> CreateFile(CumulativeClaimData data);
     }
 
     public class CumulativeDataFileProducer : ICumulativeDataFileProducer
@@ -22,21 +23,23 @@ namespace CumulativeData
             _config = config;
             _logger = logger;
         }
-        public void CreateFile(CumulativeClaimData data)
+        public async Task<string> CreateFile(CumulativeClaimData data)
         {
-            string fileName = $"CD_{ DateTime.Now.ToLongTimeString()}";
+            string fileName = $"CD_{ DateTime.Now:yyyyMMddHHmmss}";
             try
             {
                 _logger.Info($"Writing cumulative data file {fileName}");
                 var filePath = $@"{_config.CumulativeDataFilePath}\{fileName}";
                 using (StreamWriter sw = File.AppendText(filePath))
                 {
-                    sw.WriteLine(data.EarliestOriginalYear + "," + data.DevelopmentYears);
-                    foreach (var cumulativeDataRow in data.Rows)
+                    await sw.WriteLineAsync(data.EarliestOriginalYear.Value + "," + data.DevelopmentYears);
+                    foreach(var cumulativeDataRow in data.Rows)
                     {
-                        sw.WriteLine(cumulativeDataRow.ToString());
+                       await sw.WriteLineAsync(cumulativeDataRow.ToString());
                     }
                 }
+
+                return fileName;
             }
             catch (Exception e)
             {

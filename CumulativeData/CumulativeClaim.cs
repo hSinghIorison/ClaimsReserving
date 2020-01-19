@@ -8,7 +8,12 @@ using log4net;
 
 namespace CumulativeData
 {
-    public class CumulativeClaim
+    public interface ICumulativeClaim
+    {
+        Task<CumulativeClaimData> Process(List<IncrementalClaimData> incrementalClaims);
+    }
+
+    public class CumulativeClaim : ICumulativeClaim
     {
         private readonly ILog _logger;
         private Dictionary<string, List<ClaimTriangle>> _productGroups;
