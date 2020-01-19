@@ -118,7 +118,7 @@ namespace CumulativeData.Test
             var incrementalClaims = await incrementalDataFileParser.Parse();
 
             // act
-            await _sut.Process(incrementalClaims);
+            var actualRows = await _sut.Process(incrementalClaims);
 
             // assert
             var expected = new List<CumulativeDataRow>();
@@ -150,7 +150,6 @@ namespace CumulativeData.Test
             expected.Add(cumulativeDataRow1);
             expected.Add(cumulativeDataRow2);
 
-            var actualRows = _sut.CumulativeDataRows;
             foreach (var cumulativeDataRow in actualRows)
             {
                 var cumulativeDataRows = expected.Single(x => x.Product == cumulativeDataRow.Product);

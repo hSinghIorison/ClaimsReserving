@@ -8,11 +8,10 @@ namespace CumulativeData
 {
     public class CumulativeClaimData
     {
-        public List<CumulativeDataRow> CumulativeDataRows { get; private set; }
         public Dictionary<string, List<ClaimTriangle>> ProductGroups { get; private set; }
         public Year EarliestOriginalYear { get; private set; }
         public byte DevelopmentYears { get; private set; }
-        public async Task Process(List<IncrementalClaimData> incrementalClaims)
+        public async Task<List<CumulativeDataRow>> Process(List<IncrementalClaimData> incrementalClaims)
         {
             await Task.Run(() =>
             {
@@ -38,7 +37,7 @@ namespace CumulativeData
 
             var rows = await Task.WhenAll(tasks);
 
-            CumulativeDataRows = rows.ToList();
+            return rows.ToList();
 
         }
 
