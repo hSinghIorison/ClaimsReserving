@@ -4,7 +4,7 @@ namespace CumulativeData.SemanticType
 {
     public sealed class Year : SemanticTypeBase<string>, IEquatable<Year>, IComparable<Year>
     {
-        public int DateTimeYear { get; }
+        public int DateTimeYear { get; private set; }
 
         public Year(string someYear) : base(IsValid, someYear)
         {
@@ -52,6 +52,12 @@ namespace CumulativeData.SemanticType
         public static int operator -(Year left, Year right)
         {
             return left.DateTimeYear - right.DateTimeYear + 1; //inclusive
+        }
+
+        public static Year operator +(Year left, int right)
+        {
+            left.DateTimeYear = left.DateTimeYear + right;
+            return left; //inclusive
         }
 
         private static bool IsValid(string arg)

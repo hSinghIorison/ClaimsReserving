@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CumulativeData.SemanticType;
@@ -7,7 +8,8 @@ namespace CumulativeData
 {
     public class CumulativeClaimData
     {
-        public Dictionary<string, HashSet<ClaimTriangle>> ProductGroups { get; private set; }
+        public List<CumulativeDataRow> CumulativeDataRows { get; private set; }
+        public Dictionary<string, List<ClaimTriangle>> ProductGroups { get; private set; }
         public Year EarliestOriginalYear { get; private set; }
         public byte DevelopmentYears { get; private set; }
         public async Task Process(List<IncrementalClaimData> incrementalClaims)
@@ -15,14 +17,15 @@ namespace CumulativeData
             await Task.Run(() =>
             {
                 EarliestOriginalYear = incrementalClaims.Min(x => x.OriginalYear);
-                DevelopmentYears = (byte) (incrementalClaims.Max(x => x.OriginalYear) - EarliestOriginalYear);
+                var year = incrementalClaims.Max(x => x.OriginalYear);
+                DevelopmentYears = (byte) (year - EarliestOriginalYear);
             });
 
             await Task.Run(() =>
             {
                 ProductGroups = incrementalClaims
                     .GroupBy(x => x.Product)
-                    .ToDictionary(x => x.Key, ToClaimHashSet);
+                    .ToDictionary(x => x.Key, ToClaimSet);
             });
 
             List<Task<CumulativeDataRow>> tasks = new List<Task<CumulativeDataRow>>();
@@ -35,18 +38,41 @@ namespace CumulativeData
 
             var rows = await Task.WhenAll(tasks);
 
-            var cumulativeDataRows = rows.ToList();
+            CumulativeDataRows = rows.ToList();
 
         }
 
-        private CumulativeDataRow MakeRow(KeyValuePair<string, HashSet<ClaimTriangle>> productGroup)
+        private CumulativeDataRow MakeRow(KeyValuePair<string, List<ClaimTriangle>> productGroup)
         {
-            return new CumulativeDataRow { Product = productGroup.Key };
+            var cumulativeDataRow = new CumulativeDataRow(productGroup.Key);
+            Year maxDevelopmentYear = new Year ((EarliestOriginalYear.DateTimeYear + DevelopmentYears).ToString());
+            for (int originalYear = EarliestOriginalYear.DateTimeYear;
+                originalYear < maxDevelopmentYear.DateTimeYear;
+                originalYear++)
+            {
+                double runningIncrement = 0;
+                for (int developmentYear = originalYear;
+                    developmentYear < maxDevelopmentYear.DateTimeYear;
+                    developmentYear++)
+                {
+                    var claimTriangle = productGroup.Value.SingleOrDefault(x =>
+                            x.OriginalYear.DateTimeYear == originalYear &&
+                            x.DevelopmentYear.DateTimeYear == developmentYear);
+
+                    if (claimTriangle != null)
+                    {
+                        runningIncrement += claimTriangle.Increment;
+                    }
+
+                    cumulativeDataRow.AddIncrement(runningIncrement);
+                }
+            }
+            return cumulativeDataRow;
         }
 
-        private HashSet<ClaimTriangle> ToClaimHashSet(IGrouping<string, IncrementalClaimData> incrementalClaims)
+        private List<ClaimTriangle> ToClaimSet(IGrouping<string, IncrementalClaimData> incrementalClaims)
         {
-            var claimTriangles = new HashSet<ClaimTriangle>();
+            var claimTriangles = new List<ClaimTriangle>();
             foreach (var data in incrementalClaims.OrderBy(x=>x.OriginalYear).ThenBy(x=>x.DevelopmentYear))
             {
                 claimTriangles.Add(ClaimTriangle.Create(data.OriginalYear, data.DevelopmentYear, data.Increment));
@@ -58,7 +84,24 @@ namespace CumulativeData
 
     public class CumulativeDataRow  
     {
-        public string Product { get; set; }
+        public string Product { get; private  set; }
+        public List<double> Increments { get; private set; }
+
+        public CumulativeDataRow(string product)
+        {
+            Product = product;
+            Increments = new List<double>();
+        }
+
+        public void AddIncrement(double increment)
+        {
+            Increments.Add(increment);
+        }
+
+        public override string ToString()
+        {
+            return Product+","+ String.Join(",", Increments);
+        }
     }
 
     public class ClaimTriangle

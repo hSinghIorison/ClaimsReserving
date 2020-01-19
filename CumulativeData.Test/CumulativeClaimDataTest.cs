@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using CumulativeData.SemanticType;
 using Microsoft.Practices.Unity;
@@ -103,6 +102,60 @@ namespace CumulativeData.Test
                 .Create(new Year("1993"), new Year("1993"), 100);
             sutProductGroups["Non-Comp"].Last().AsSource().OfLikeness<ClaimTriangle>()
                 .ShouldEqual(lastExpectedClaimTriangleForSecondProduct);
+        }
+
+        [TestMethod]
+        [DeploymentItem(@"TestResources\IncrementalClaimData.csv")]
+        public async Task Process_ProductGroupsWithClaimTriangles_CumulativeDataRowsAreCreated()
+        {
+            // arrange
+            _container
+                .GetMock<IConfig>()
+                .Setup(x => x.IncrementalDataFilePath)
+                .Returns(Path.GetFullPath("IncrementalClaimData.csv"));
+
+            var incrementalDataFileParser = _container.Resolve<IIncrementalDataFileParser>();
+            var incrementalClaims = await incrementalDataFileParser.Parse();
+
+            // act
+            await _sut.Process(incrementalClaims);
+
+            // assert
+            var expected = new List<CumulativeDataRow>();
+            
+            var cumulativeDataRow1 = new CumulativeDataRow("Comp");
+            cumulativeDataRow1.AddIncrement(0);
+            cumulativeDataRow1.AddIncrement(0);
+            cumulativeDataRow1.AddIncrement(0);
+            cumulativeDataRow1.AddIncrement(0);
+            cumulativeDataRow1.AddIncrement(0);
+            cumulativeDataRow1.AddIncrement(0);
+            cumulativeDataRow1.AddIncrement(0);
+            cumulativeDataRow1.AddIncrement(110);
+            cumulativeDataRow1.AddIncrement(280);
+            cumulativeDataRow1.AddIncrement(200);
+
+            var cumulativeDataRow2 = new CumulativeDataRow("Non-Comp");
+            cumulativeDataRow2.AddIncrement(45.2);
+            cumulativeDataRow2.AddIncrement(110);
+            cumulativeDataRow2.AddIncrement(110);
+            cumulativeDataRow2.AddIncrement(147);
+            cumulativeDataRow2.AddIncrement(50);
+            cumulativeDataRow2.AddIncrement(125);
+            cumulativeDataRow2.AddIncrement(150);
+            cumulativeDataRow2.AddIncrement(55);
+            cumulativeDataRow2.AddIncrement(140);
+            cumulativeDataRow2.AddIncrement(100);
+
+            expected.Add(cumulativeDataRow1);
+            expected.Add(cumulativeDataRow2);
+
+            var actualRows = _sut.CumulativeDataRows;
+            foreach (var cumulativeDataRow in actualRows)
+            {
+                var cumulativeDataRows = expected.Single(x => x.Product == cumulativeDataRow.Product);
+                Assert.AreEqual(cumulativeDataRows.ToString(), cumulativeDataRow.ToString());
+            }
         }
     }
 }

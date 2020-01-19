@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using SemanticComparison;
+using SemanticComparison.Fluent;
 
 namespace CumulativeData.Test
 {
@@ -48,5 +51,18 @@ namespace CumulativeData.Test
             Assert.IsTrue(true);
         }
 
+    }
+
+    public static class LikenessSequenceExtensions
+    {
+        public static bool SequenceLike<T, TSource>(this IEnumerable<T> that, IEnumerable<TSource> source)
+        {
+            return SequenceLike<T, TSource>(that, source, x => x);
+        }
+
+        public static bool SequenceLike<T, TSource>(this IEnumerable<T> that, IEnumerable<TSource> source, Func<Likeness<TSource, T>, IEquatable<T>> customizeLikeness)
+        {
+            return source.Select(x => customizeLikeness(x.AsSource().OfLikeness<T>())).SequenceEqual(that.Cast<object>());
+        }
     }
 }
