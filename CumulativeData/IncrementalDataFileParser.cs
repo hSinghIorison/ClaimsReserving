@@ -73,9 +73,4 @@ namespace CumulativeData
     {
         Task<List<IncrementalClaimData>> Parse();
     }
-
-    public interface IConfig
-    {
-        string IncrementalDataFilePath { get; set; }
-    }
 }

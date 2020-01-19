@@ -15,7 +15,7 @@ namespace CumulativeData.Test
     public class CumulativeClaimDataTest
     {
         private UnityAutoMoqContainer _container;
-        private CumulativeClaimData _sut;
+        private CumulativeClaim _sut;
 
         [TestInitialize]
         public void TestInit()
@@ -24,7 +24,7 @@ namespace CumulativeData.Test
             _container.RegisterType<ICsvMapping<IncrementalClaimData>, CsvIncrementalClaimDataMapping>();
             _container.RegisterType<IIncrementalDataFileParser, IncrementalDataFileParser>();
 
-            _sut = _container.Resolve<CumulativeClaimData>();
+            _sut = _container.Resolve<CumulativeClaim>();
         }
 
         [TestMethod]
@@ -41,11 +41,11 @@ namespace CumulativeData.Test
             var incrementalClaims = await incrementalDataFileParser.Parse();
 
             // act
-            await _sut.Process(incrementalClaims);
+            var claimData = await _sut.Process(incrementalClaims);
 
             // assert
             var expected = new Year("1990");
-            _sut.EarliestOriginalYear
+            claimData.EarliestOriginalYear
                 .AsSource()
                 .OfLikeness<Year>()
                 .ShouldEqual(expected);
@@ -65,43 +65,11 @@ namespace CumulativeData.Test
             var incrementalClaims = await incrementalDataFileParser.Parse();
 
             // act
-            await _sut.Process(incrementalClaims);
+            var claimData = await _sut.Process(incrementalClaims);
 
             // assert
             byte expected = 4;
-            Assert.AreEqual(expected, _sut.DevelopmentYears);
-        }
-
-        [TestMethod]
-        [DeploymentItem(@"TestResources\IncrementalClaimData.csv")]
-        public async Task Process_ProductGroupsWithClaimTriangles_CanBeCreated()
-        {
-            // arrange
-            _container
-                .GetMock<IConfig>()
-                .Setup(x => x.IncrementalDataFilePath)
-                .Returns(Path.GetFullPath("IncrementalClaimData.csv"));
-
-            var incrementalDataFileParser = _container.Resolve<IIncrementalDataFileParser>();
-            var incrementalClaims = await incrementalDataFileParser.Parse();
-
-            // act
-            await _sut.Process(incrementalClaims);
-
-            // assert
-            byte expectedCountOfProducts = 2;
-            var sutProductGroups = _sut.ProductGroups;
-            Assert.AreEqual(expectedCountOfProducts, sutProductGroups.Keys.Count);
-            
-            ClaimTriangle firstExpectedClaimTriangleForFirstProduct = ClaimTriangle
-                .Create(new Year("1992"), new Year("1992"), 110 );
-            sutProductGroups["Comp"].First().AsSource().OfLikeness<ClaimTriangle>()
-                .ShouldEqual(firstExpectedClaimTriangleForFirstProduct);
-
-            ClaimTriangle lastExpectedClaimTriangleForSecondProduct = ClaimTriangle
-                .Create(new Year("1993"), new Year("1993"), 100);
-            sutProductGroups["Non-Comp"].Last().AsSource().OfLikeness<ClaimTriangle>()
-                .ShouldEqual(lastExpectedClaimTriangleForSecondProduct);
+            Assert.AreEqual(expected, claimData.DevelopmentYears);
         }
 
         [TestMethod]
@@ -150,7 +118,7 @@ namespace CumulativeData.Test
             expected.Add(cumulativeDataRow1);
             expected.Add(cumulativeDataRow2);
 
-            foreach (var cumulativeDataRow in actualRows)
+            foreach (var cumulativeDataRow in actualRows.Rows)
             {
                 var cumulativeDataRows = expected.Single(x => x.Product == cumulativeDataRow.Product);
                 Assert.AreEqual(cumulativeDataRows.ToString(), cumulativeDataRow.ToString());

@@ -6,30 +6,30 @@ using CumulativeData.SemanticType;
 
 namespace CumulativeData
 {
-    public class CumulativeClaimData
+    public class CumulativeClaim
     {
-        public Dictionary<string, List<ClaimTriangle>> ProductGroups { get; private set; }
-        public Year EarliestOriginalYear { get; private set; }
-        public byte DevelopmentYears { get; private set; }
-        public async Task<List<CumulativeDataRow>> Process(List<IncrementalClaimData> incrementalClaims)
+        private Dictionary<string, List<ClaimTriangle>> _productGroups;
+        private  Year _earliestOriginalYear;
+        private byte _developmentYears;
+        public async Task<CumulativeClaimData> Process(List<IncrementalClaimData> incrementalClaims)
         {
             await Task.Run(() =>
             {
-                EarliestOriginalYear = incrementalClaims.Min(x => x.OriginalYear);
+                _earliestOriginalYear = incrementalClaims.Min(x => x.OriginalYear);
                 var year = incrementalClaims.Max(x => x.OriginalYear);
-                DevelopmentYears = (byte) (year - EarliestOriginalYear);
+                _developmentYears = (byte) (year - _earliestOriginalYear);
             });
 
             await Task.Run(() =>
             {
-                ProductGroups = incrementalClaims
+                _productGroups = incrementalClaims
                     .GroupBy(x => x.Product)
                     .ToDictionary(x => x.Key, ToClaimSet);
             });
 
             List<Task<CumulativeDataRow>> tasks = new List<Task<CumulativeDataRow>>();
 
-            foreach (var productGroup in ProductGroups)
+            foreach (var productGroup in _productGroups)
             {
                 Task<CumulativeDataRow> task = Task.Run( () =>  MakeRow(productGroup));
                 tasks.Add(task);
@@ -37,15 +37,20 @@ namespace CumulativeData
 
             var rows = await Task.WhenAll(tasks);
 
-            return rows.ToList();
+            return new CumulativeClaimData
+            {
+                EarliestOriginalYear = _earliestOriginalYear,
+                DevelopmentYears = _developmentYears,
+                Rows = rows.ToList()
+            };
 
         }
 
         private CumulativeDataRow MakeRow(KeyValuePair<string, List<ClaimTriangle>> productGroup)
         {
             var cumulativeDataRow = new CumulativeDataRow(productGroup.Key);
-            Year maxDevelopmentYear = new Year ((EarliestOriginalYear.DateTimeYear + DevelopmentYears).ToString());
-            for (int originalYear = EarliestOriginalYear.DateTimeYear;
+            Year maxDevelopmentYear = new Year ((_earliestOriginalYear.DateTimeYear + _developmentYears).ToString());
+            for (int originalYear = _earliestOriginalYear.DateTimeYear;
                 originalYear < maxDevelopmentYear.DateTimeYear;
                 originalYear++)
             {
@@ -79,6 +84,13 @@ namespace CumulativeData
 
             return claimTriangles;
         }
+    }
+
+    public class CumulativeClaimData    
+    {
+        public Year EarliestOriginalYear { get; set; }
+        public byte DevelopmentYears { get; set; }
+        public List<CumulativeDataRow> Rows { get; set; }
     }
 
     public class CumulativeDataRow  
