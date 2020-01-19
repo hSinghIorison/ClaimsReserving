@@ -1,7 +1,6 @@
-﻿using System;
-using CumulativeData.SemanticType;
+﻿using CumulativeData.SemanticType;
 
-namespace CumulativeData
+namespace CumulativeData.Model
 {
     public class IncrementalClaimData
     {

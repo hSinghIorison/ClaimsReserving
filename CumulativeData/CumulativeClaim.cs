@@ -2,48 +2,65 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using CumulativeData.Model;
 using CumulativeData.SemanticType;
+using log4net;
 
 namespace CumulativeData
 {
     public class CumulativeClaim
     {
+        private readonly ILog _logger;
         private Dictionary<string, List<ClaimTriangle>> _productGroups;
         private  Year _earliestOriginalYear;
         private byte _developmentYears;
+
+        public CumulativeClaim(ILog logger)
+        {
+            _logger = logger;
+        }
+
         public async Task<CumulativeClaimData> Process(List<IncrementalClaimData> incrementalClaims)
         {
-            await Task.Run(() =>
+            try
             {
-                _earliestOriginalYear = incrementalClaims.Min(x => x.OriginalYear);
-                var year = incrementalClaims.Max(x => x.OriginalYear);
-                _developmentYears = (byte) (year - _earliestOriginalYear);
-            });
+                _logger.Info($"Processing incremental claims to work out cumulative claims");
+                await Task.Run(() =>
+                {
+                    _earliestOriginalYear = incrementalClaims.Min(x => x.OriginalYear);
+                    var year = incrementalClaims.Max(x => x.OriginalYear);
+                    _developmentYears = (byte) (year - _earliestOriginalYear);
+                });
 
-            await Task.Run(() =>
-            {
-                _productGroups = incrementalClaims
-                    .GroupBy(x => x.Product)
-                    .ToDictionary(x => x.Key, ToClaimSet);
-            });
+                await Task.Run(() =>
+                {
+                    _productGroups = incrementalClaims
+                        .GroupBy(x => x.Product)
+                        .ToDictionary(x => x.Key, ToClaimSet);
+                });
 
-            List<Task<CumulativeDataRow>> tasks = new List<Task<CumulativeDataRow>>();
+                List<Task<CumulativeDataRow>> tasks = new List<Task<CumulativeDataRow>>();
 
-            foreach (var productGroup in _productGroups)
-            {
-                Task<CumulativeDataRow> task = Task.Run( () =>  MakeRow(productGroup));
-                tasks.Add(task);
+                foreach (var productGroup in _productGroups)
+                {
+                    Task<CumulativeDataRow> task = Task.Run(() => MakeRow(productGroup));
+                    tasks.Add(task);
+                }
+
+                var rows = await Task.WhenAll(tasks);
+
+                return new CumulativeClaimData
+                {
+                    EarliestOriginalYear = _earliestOriginalYear,
+                    DevelopmentYears = _developmentYears,
+                    Rows = rows.ToList()
+                };
             }
-
-            var rows = await Task.WhenAll(tasks);
-
-            return new CumulativeClaimData
+            catch (Exception e)
             {
-                EarliestOriginalYear = _earliestOriginalYear,
-                DevelopmentYears = _developmentYears,
-                Rows = rows.ToList()
-            };
-
+                _logger.Error("Error while working out cumulative claims", e);
+                throw;
+            }
         }
 
         private CumulativeDataRow MakeRow(KeyValuePair<string, List<ClaimTriangle>> productGroup)
@@ -83,53 +100,6 @@ namespace CumulativeData
             }
 
             return claimTriangles;
-        }
-    }
-
-    public class CumulativeClaimData    
-    {
-        public Year EarliestOriginalYear { get; set; }
-        public byte DevelopmentYears { get; set; }
-        public List<CumulativeDataRow> Rows { get; set; }
-    }
-
-    public class CumulativeDataRow  
-    {
-        public string Product { get; private  set; }
-        public List<double> Increments { get; private set; }
-
-        public CumulativeDataRow(string product)
-        {
-            Product = product;
-            Increments = new List<double>();
-        }
-
-        public void AddIncrement(double increment)
-        {
-            Increments.Add(increment);
-        }
-
-        public override string ToString()
-        {
-            return Product+","+ String.Join(",", Increments);
-        }
-    }
-
-    public class ClaimTriangle
-    {
-        private ClaimTriangle(){}    
-        public Year OriginalYear { get; private set; }
-        public Year DevelopmentYear { get; private set; }
-        public double Increment { get; private set; }
-
-        public static ClaimTriangle Create(Year originalYear, Year developmentYear, double increment)
-        {
-            return new ClaimTriangle
-            {
-                DevelopmentYear = developmentYear,
-                OriginalYear = originalYear,
-                Increment = increment
-            };
         }
     }
 }
